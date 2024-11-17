@@ -5,7 +5,6 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(helloworld VERSION ${PROJECT_VERSION})
 
-cmake_policy(SET CMP0167 NEW)
 find_package(Boost COMPONENTS unit_test_framework REQUIRED) #Выполняет поиск библиотеки Boost, в частности, unit_test_framework компонента, который требуется для тестирования. Если он не найден, CMake выдаст сообщение об ошибке.
 
 configure_file(version.h.in version.h)
