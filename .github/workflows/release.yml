@@ -52,7 +52,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-        
+
       - name: Check if tag exists
         id: check_tag
         run: |
@@ -65,40 +65,37 @@ jobs:
             echo "::set-output name=tag_exists::false"
           fi
         
-      - name: Create Release  # Создание релиза для Linux
-        if: steps.check_tag.outputs.tag_exists == 'false' 
-        id: create_release  # Уникальный идентификатор для этого шага
-        uses: actions/create-release@v1  # Использует действие для создания релиза на GitHub
+      - name: Create Release
+        id: create_release
+        if: steps.check_tag.outputs.tag_exists == 'false'  # Создавать релиз только если тег не существует
+        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Токен доступа к GitHub из секретов репозитория
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "release-${{ github.run_number }}"  # Имя тега релиза
-          release_name: "Release ${{ github.run_number }}"  # Название релиза
-          draft: false  # Не создавать черновик релиза
-          prerelease: false  # Не делать предварительный релиз
+          tag_name: "release-${{ github.run_number }}"
+          release_name: "Release ${{ github.run_number }}"
+          draft: false
+          prerelease: false
 
-      - name: Upload Release Asset (Linux)  # Загрузка артефакта релиза для Linux
-        if: ${{ runner.os == 'Linux' }}  # Условие для выполнения только на Linux
-        uses: actions/upload-release-asset@v1  
+      - name: Upload Release Asset (Linux)
+        if: ${{ runner.os == 'Linux' && steps.check_tag.outputs.tag_exists == 'false' }}
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  #агрузку артефакта (например, .dmg файл для macOS) в релиз на GitHub.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}  
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Путь к артефакту (например, .deb файл)
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb  # Имя артефакта (например, helloworld-0.0.1-Linux.deb)
-          asset_content_type: application/vnd.debian.binary-package  # Тип контента для Debian пакетов
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
 
-      - name: Upload Release Asset (macOS)  # Загрузка артефакта релиза для macOS 
-        if: ${{ runner.os == 'macOS' }}  
-        uses: actions/upload-release-asset@v1  # Использует действие GitHub для загрузки артефактов в релиз
+      - name: Upload Release Asset (macOS)
+        if: ${{ runner.os == 'macOS' && steps.check_tag.outputs.tag_exists == 'false' }}
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}  # URL для загрузки артефакта, полученный из предыдущего шага создания релиза
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg  # Путь к артефакту (например, .dmg файл)
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg  
-          asset_content_type: application/x-apple-diskimage   # Тип контента для образа диска Apple
-
-
-
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg
+          asset_content_type: application/x-apple-diskimage
 
