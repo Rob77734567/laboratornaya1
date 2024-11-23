@@ -7,7 +7,7 @@ on:
       - feature/github_actions  # Для веток с названием feature/github_actions
 
 permissions:
-  contents: write  # Права на запись в репозиторий
+  contents: write  # Права на запись в репозитории
 
 jobs:
   build:  # Определение задачи сборки
@@ -64,9 +64,8 @@ jobs:
           draft: false  # Не создавать черновик релиза
           prerelease: false  # Не делать предварительный релиз
 
-
       - name: Upload Release Asset (Linux)  # Загрузка артефакта релиза для Linux
-        if: ${{ runner.os == 'ubuntu-latest' }}  # Условие для выполнения только на Linux
+        if: ${{ runner.os == 'Linux' }}  # Условие для выполнения только если сборка была на Linux
         uses: actions/upload-release-asset@v1  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
@@ -77,12 +76,12 @@ jobs:
           asset_content_type: application/vnd.debian.binary-package  
 
       - name: Upload Release Asset (macOS)  # Загрузка артефакта релиза для macOS 
-        if: ${{ runner.os == 'macos-latest' }}  
+        if: ${{ runner.os == 'macOS' }}  # Условие для выполнения только если сборка была на macOS
         uses: actions/upload-release-asset@v1  
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}  
           asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg  
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg  
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg
           asset_content_type: application/x-apple-diskimage  
