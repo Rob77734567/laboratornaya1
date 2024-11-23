@@ -35,19 +35,29 @@ jobs:
 
       - name: Configure with CMake
         run: |
-          cmake . -DPATCH_VERSION=${{ github.run_number }}
+          mkdir -p build
+          cd build
+          cmake .. -DPATCH_VERSION=${{ github.run_number }}
 
       - name: Build the project
         run: |
+          cd build
           cmake --build .
 
       - name: Run tests
         run: |
-          cmake --build . --target test
+          cd build
+          ctest --output-on-failure
 
       - name: Create package
         run: |
-          cmake --build . --target package
+          cd build
+          cpack
+
+      - name: Verify artifacts
+        run: |
+          echo "Listing files in the build directory:"
+          ls -la ./build
 
   create_release:
     runs-on: ubuntu-latest
@@ -56,14 +66,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Verify artifacts
+        run: |
+          echo "Verifying build directory contents:"
+          ls -la ./build
+
       - name: Create release using gh cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "release-${{ github.run_number }}" ./helloworld-0.0.${{ github.run_number }}-Linux.deb ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg \
+          gh release create "release-${{ github.run_number }}" \
+            ./build/helloworld-0.0.${{ github.run_number }}-Linux.deb \
+            ./build/helloworld-0.0.${{ github.run_number }}-Darwin.dmg \
             --title "Release ${{ github.run_number }}" \
             --notes "Automated release by GitHub Actions"
-
-      - name: Verify release
-        run: |
-          gh release view "release-${{ github.run_number }}"
