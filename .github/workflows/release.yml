@@ -48,54 +48,41 @@ jobs:
       - name: Create package  # Создание пакета для распространения
         run: |  
           cmake --build . --target package  # Создает пакет (например, .deb или .dmg)
-      
-      - name: Checkout code
-        uses: actions/checkout@v2
 
-
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          TAG_NAME="release-${{ github.run_number }}"
-          if git tag -l | grep -q "$TAG_NAME"; then
-            echo "Tag $TAG_NAME already exists."
-            echo "::set-output name=tag_exists::true"
-          else
-            echo "Tag $TAG_NAME does not exist."
-            echo "::set-output name=tag_exists::false"
-          fi
-        
-      - name: Create Release
-        id: create_release
-        if: steps.check_tag.outputs.tag_exists == 'false'  # Создавать релиз только если тег не существует
-        uses: actions/create-release@v1
+  create_release:  # Задача для создания релиза
+    runs-on: ubuntu-latest  # Запускает на Ubuntu
+    needs: build  # Зависит от завершения задачи build
+    steps:
+      - name: Create Release  # Создание релиза
+        id: create_release  # Уникальный идентификатор для этого шага
+        uses: actions/create-release@v1  # Использует действие для создания релиза на GitHub
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Токен доступа к GitHub из секретов репозитория
         with:
-          tag_name: "release-${{ github.run_number }}"
-          release_name: "Release ${{ github.run_number }}"
-          draft: false
-          prerelease: false
+          tag_name: "release-${{ github.run_number }}"  # Имя тега релиза
+          release_name: "Release ${{ github.run_number }}"  # Название релиза
+          draft: false  # Не создавать черновик релиза
+          prerelease: false  # Не делать предварительный релиз
 
-      - name: Upload Release Asset (Linux)
-        if: ${{ runner.os == 'Linux' && steps.check_tag.outputs.tag_exists == 'false' }}
-        uses: actions/upload-release-asset@v1
+
+      - name: Upload Release Asset (Linux)  # Загрузка артефакта релиза для Linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}  # Условие для выполнения только на Linux
+        uses: actions/upload-release-asset@v1  
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/vnd.debian.binary-package
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb  
+          asset_content_type: application/vnd.debian.binary-package  
 
-      - name: Upload Release Asset (macOS)
-        if: ${{ runner.os == 'macOS' && steps.check_tag.outputs.tag_exists == 'false' }}
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Asset (macOS)  # Загрузка артефакта релиза для macOS 
+        if: ${{ matrix.os == 'macos-latest' }}  
+        uses: actions/upload-release-asset@v1  
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg
-          asset_content_type: application/x-apple-diskimage
-
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg  
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg  
+          asset_content_type: application/x-apple-diskimage  
