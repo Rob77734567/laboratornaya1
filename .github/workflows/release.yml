@@ -53,35 +53,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "release-${{ github.run_number }}"
-          release_name: "Release ${{ github.run_number }}"
-          draft: false
-          prerelease: false
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Upload Release Asset (Linux)
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        uses: actions/upload-release-asset@v1
+      - name: Create release using gh cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/vnd.debian.binary-package
+        run: |
+          gh release create "release-${{ github.run_number }}" ./helloworld-0.0.${{ github.run_number }}-Linux.deb ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg \
+            --title "Release ${{ github.run_number }}" \
+            --notes "Automated release by GitHub Actions"
 
-      - name: Upload Release Asset (macOS)
-        if: ${{ matrix.os == 'macos-latest' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.dmg
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.dmg
-          asset_content_type: application/x-apple-diskimage
+      - name: Verify release
+        run: |
+          gh release view "release-${{ github.run_number }}"
